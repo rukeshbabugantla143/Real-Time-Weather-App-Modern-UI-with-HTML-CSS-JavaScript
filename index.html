@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather Widget - Real Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="body-wrapper min-h-screen flex justify-center items-center p-4">
+        <div class="weather-widget-container relative w-full max-w-sm sm:max-w-md">
+            <div class="weather-widget relative text-white bg-gradient-to-br from-purple-700/70 via-indigo-800/60 to-blue-900/70 backdrop-blur-lg shadow-2xl rounded-3xl p-6 overflow-hidden border border-white/10">
+                
+                <!-- Cloud Animation -->
+                <div class="cloud-animation" id="cloudAnimation">
+                    <div class="cloud cloud-1"></div>
+                    <div class="cloud cloud-2"></div>
+                    <div class="cloud cloud-3"></div>
+                    <div id="rainContainer"></div>
+                    <div id="cloudTooltip" class="absolute top-20 right-4 bg-black/70 text-white px-3 py-1.5 rounded-md text-xs opacity-0 transition-opacity duration-300 pointer-events-none z-40 shadow-lg">
+                        Click clouds for rain!
+                        <div class="absolute -top-1 right-3 w-3 h-3 bg-black/70 transform rotate-45"></div>
+                    </div>
+                </div>
+
+                <div class="relative z-20">
+                    <!-- Error Message -->
+                    <div class="error-message animate-fadeInUp" id="errorMessage">
+                        <div class="flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <span id="errorText">Failed to load weather data</span>
+                        </div>
+                    </div>
+
+                    <!-- Search and Location Section -->
+                    <div class="flex items-center mb-4 animate-fadeInUp">
+                        <div class="relative flex-1 mr-2">
+                            <div class="relative">
+                                <input 
+                                    type="text" 
+                                    id="locationSearch" 
+                                    placeholder="Search for a city..." 
+                                    class="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 px-4 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/30 focus:border-white/30 transition-all pr-10"
+                                >
+                                <i class="fas fa-search absolute right-3 top-3 text-white/60"></i>
+                            </div>
+                            <div id="searchResults" class="search-results"></div>
+                        </div>
+                        <button 
+                            id="detectLocationBtn" 
+                            class="bg-white/10 backdrop-blur-sm hover:bg-white/20 border border-white/20 rounded-xl p-2.5 transition-all flex items-center justify-center"
+                            title="Detect my location"
+                        >
+                            <i class="fas fa-location-arrow"></i>
+                        </button>
+                    </div>
+
+                    <div class="date-time text-sm font-light opacity-80 mb-1 tracking-wide animate-fadeInUp" id="dateTime">Thursday, 09:24</div>
+
+                    <div class="current-weather flex items-center mb-2">
+                        <div class="weather-icon-main text-5xl mr-3" id="weatherIcon">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                        <div class="temp text-5xl font-semibold">
+                            <span class="bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-300 animate-fadeInScaleUp delay-100" id="temperature">24°C</span>
+                        </div>
+                    </div>
+
+                    <div class="location text-lg opacity-90 mb-4 tracking-wide animate-fadeInUp delay-200 flex items-center justify-between" id="location">
+                        <div class="flex items-center">
+                            <i class="fas fa-map-marker-alt mr-2 text-white/70"></i>
+                            <span id="locationText">New York, USA</span>
+                        </div>
+                        <button id="refreshBtn" class="text-white/70 hover:text-white transition-colors" title="Refresh weather">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+
+                    <div class="sun-info bg-black/30 backdrop-blur-sm rounded-2xl p-3 sm:p-4 flex justify-between items-center mb-4 border border-white/10 shadow-md animate-fadeInUp delay-300">
+                        <div class="sunrise text-center">
+                            <div class="sun-icon text-xl mb-1">🌅</div>
+                            <div class="text-xs opacity-80" id="sunriseTime">6:14 AM</div>
+                        </div>
+                        <div class="day-length text-center text-sm opacity-90" id="dayLength">11 h 42 m</div>
+                        <div class="sunset text-center">
+                            <div class="sun-icon text-xl mb-1">🌇</div>
+                            <div class="text-xs opacity-80" id="sunsetTime">7:56 PM</div>
+                        </div>
+                    </div>
+
+                    <div class="additional-info grid grid-cols-2 gap-3 mb-5">
+                        <div class="precipitation bg-white/10 backdrop-blur-sm rounded-xl p-3 flex items-center border border-white/5 shadow-sm animate-fadeInUp delay-400">
+                            <div class="precip-icon text-2xl mr-2 text-blue-300 drop-shadow-lg animate-gentleBob">
+                                <i class="fas fa-cloud-rain"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs opacity-70">Precipitation</div>
+                                <div class="text-sm font-medium" id="precipitationChance">15%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="humidity bg-white/10 backdrop-blur-sm rounded-xl p-3 flex items-center border border-white/5 shadow-sm animate-fadeInUp delay-500">
+                            <div class="humidity-icon text-2xl mr-2 text-blue-300 drop-shadow-lg">
+                                <i class="fas fa-tint"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs opacity-70">Humidity</div>
+                                <div class="text-sm font-medium" id="humidity">65%</div>
+                            </div>
+                        </div>
+                        
+                        <div class="wind bg-white/10 backdrop-blur-sm rounded-xl p-3 flex items-center border border-white/5 shadow-sm animate-fadeInUp delay-600">
+                            <div class="wind-icon text-2xl mr-2 text-blue-300 drop-shadow-lg">
+                                <i class="fas fa-wind"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs opacity-70">Wind</div>
+                                <div class="text-sm font-medium" id="windSpeed">12 km/h</div>
+                            </div>
+                        </div>
+                        
+                        <div class="pressure bg-white/10 backdrop-blur-sm rounded-xl p-3 flex items-center border border-white/5 shadow-sm animate-fadeInUp delay-700">
+                            <div class="pressure-icon text-2xl mr-2 text-blue-300 drop-shadow-lg">
+                                <i class="fas fa-compress-arrows-alt"></i>
+                            </div>
+                            <div>
+                                <div class="text-xs opacity-70">Pressure</div>
+                                <div class="text-sm font-medium" id="pressure">1013 hPa</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="forecast flex flex-nowrap justify-between pb-2 overflow-x-auto" id="forecastContainer">
+                        <!-- Forecast will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
